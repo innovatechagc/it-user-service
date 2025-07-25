@@ -29,22 +29,12 @@ spec:
           valueFrom:
             secretKeyRef:
               key: latest
-              name: jwt-secret-prod
+              name: it-chatbot-jwt-password
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               key: latest
-              name: db-password-prod
-        - name: VAULT_TOKEN
-          valueFrom:
-            secretKeyRef:
-              key: latest
-              name: vault-token-prod
-        - name: EXTERNAL_API_KEY
-          valueFrom:
-            secretKeyRef:
-              key: latest
-              name: external-api-key-prod
+              name: it-chatbot-db-password
         resources:
           limits:
             cpu: "2"
