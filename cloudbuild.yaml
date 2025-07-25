@@ -20,18 +20,26 @@ steps:
       - 'push'
       - 'gcr.io/$PROJECT_ID/it-user-service:latest'
 
+  # Substitute variables in deployment files
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        sed 's/\$$PROJECT_ID/'$PROJECT_ID'/g' deploy/cloudrun-staging.yaml > deploy/cloudrun-staging-processed.yaml
+        sed 's/\$$PROJECT_ID/'$PROJECT_ID'/g' deploy/cloudrun-production.yaml > deploy/cloudrun-production-processed.yaml
+    id: 'substitute-vars'
+
   # Deploy to Cloud Run Staging (only on develop branch)
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'run'
       - 'services'
       - 'replace'
-      - 'deploy/cloudrun-staging.yaml'
+      - 'deploy/cloudrun-staging-processed.yaml'
       - '--region=us-east1'
       - '--project=$PROJECT_ID'
-    env:
-      - 'PROJECT_ID=$PROJECT_ID'
-    waitFor: ['-']
+    waitFor: ['substitute-vars']
     id: 'deploy-staging'
 
   # Deploy to Cloud Run Production (only on main branch)
@@ -40,12 +48,10 @@ steps:
       - 'run'
       - 'services'
       - 'replace'
-      - 'deploy/cloudrun-production.yaml'
+      - 'deploy/cloudrun-production-processed.yaml'
       - '--region=us-east1'
       - '--project=$PROJECT_ID'
-    env:
-      - 'PROJECT_ID=$PROJECT_ID'
-    waitFor: ['-']
+    waitFor: ['substitute-vars']
     id: 'deploy-production'
 
 # Substitute variables in deployment files
