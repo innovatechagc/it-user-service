@@ -28,6 +28,7 @@ steps:
       - 'replace'
       - 'deploy/cloudrun-staging.yaml'
       - '--region=us-central1'
+      - '--project=$PROJECT_ID'
     env:
       - 'PROJECT_ID=$PROJECT_ID'
     waitFor: ['-']
@@ -41,6 +42,7 @@ steps:
       - 'replace'
       - 'deploy/cloudrun-production.yaml'
       - '--region=us-central1'
+      - '--project=$PROJECT_ID'
     env:
       - 'PROJECT_ID=$PROJECT_ID'
     waitFor: ['-']
@@ -49,6 +51,7 @@ steps:
 # Substitute variables in deployment files
 substitutions:
   _REGION: 'us-central1'
+  _PROJECT_ID: '$PROJECT_ID'
 
 # Images to be pushed to Container Registry
 images:
