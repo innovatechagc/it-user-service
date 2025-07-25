@@ -1,5 +1,5 @@
 # Multi-stage build para optimizar el tamaño de la imagen
-FROM golang:1.21-alpine AS builder
+FROM golang:1.22-alpine AS builder
 
 # Instalar dependencias necesarias
 RUN apk add --no-cache git ca-certificates tzdata
@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # Compilar la aplicación
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd
 
 # Imagen final
 FROM alpine:latest

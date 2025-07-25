@@ -100,10 +100,8 @@ func (h *RoleHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
 	// Crear rol
 	role := &models.Role{
 		Name:        req.Name,
-		DisplayName: req.DisplayName,
 		Description: req.Description,
-		IsActive:    true,
-		IsSystem:    false,
+		Active:      true,
 	}
 
 	if err := h.roleRepo.CreateRole(role); err != nil {
@@ -164,22 +162,15 @@ func (h *RoleHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verificar que no sea un rol del sistema
-	if role.IsSystem {
-		log.WithField("role_id", id).Warn("Attempt to update system role")
-		http.Error(w, "Cannot update system roles", http.StatusForbidden)
-		return
-	}
-
 	// Actualizar campos
-	if req.DisplayName != "" {
-		role.DisplayName = req.DisplayName
+	if req.Name != "" {
+		role.Name = req.Name
 	}
 	if req.Description != "" {
 		role.Description = req.Description
 	}
-	if req.IsActive != nil {
-		role.IsActive = *req.IsActive
+	if req.Active != nil {
+		role.Active = *req.Active
 	}
 
 	// Guardar cambios
@@ -210,17 +201,11 @@ func (h *RoleHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verificar que el rol existe y no es del sistema
-	role, err := h.roleRepo.GetRoleByID(uint(id))
+	// Verificar que el rol existe
+	_, err = h.roleRepo.GetRoleByID(uint(id))
 	if err != nil {
 		log.WithError(err).WithField("role_id", id).Error("Role not found for deletion")
 		http.Error(w, "Role not found", http.StatusNotFound)
-		return
-	}
-
-	if role.IsSystem {
-		log.WithField("role_id", id).Warn("Attempt to delete system role")
-		http.Error(w, "Cannot delete system roles", http.StatusForbidden)
 		return
 	}
 
@@ -274,10 +259,10 @@ func (h *RoleHandler) AssignRoleToUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Asignar rol al usuario
-	if err := h.roleRepo.AssignRoleToUser(uint(userID), req.RoleID, req.ExpiresAt); err != nil {
+	if err := h.roleRepo.AssignRoleToUser(uint(userID), req.Role); err != nil {
 		log.WithError(err).WithFields(map[string]interface{}{
 			"user_id": userID,
-			"role_id": req.RoleID,
+			"role":    req.Role,
 		}).Error("Failed to assign role to user")
 		http.Error(w, "Error assigning role", http.StatusInternalServerError)
 		return
@@ -285,7 +270,7 @@ func (h *RoleHandler) AssignRoleToUser(w http.ResponseWriter, r *http.Request) {
 
 	log.WithFields(map[string]interface{}{
 		"user_id": userID,
-		"role_id": req.RoleID,
+		"role":    req.Role,
 	}).Info("Role assigned to user successfully")
 	
 	w.Header().Set("Content-Type", "application/json")
@@ -294,12 +279,12 @@ func (h *RoleHandler) AssignRoleToUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// RemoveRoleFromUser maneja DELETE /users/{user_id}/roles/{role_id}
+// RemoveRoleFromUser maneja DELETE /users/{user_id}/roles/{role_name}
 func (h *RoleHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
 	userIDStr := vars["user_id"]
-	roleIDStr := vars["role_id"]
+	roleName := vars["role_name"]
 	
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
@@ -308,18 +293,17 @@ func (h *RoleHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	
-	roleID, err := strconv.Atoi(roleIDStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid role ID provided")
-		http.Error(w, "Invalid role ID", http.StatusBadRequest)
+	if roleName == "" {
+		log.Warn("Role name is required")
+		http.Error(w, "Role name is required", http.StatusBadRequest)
 		return
 	}
 
 	// Remover rol del usuario
-	if err := h.roleRepo.RemoveRoleFromUser(uint(userID), uint(roleID)); err != nil {
+	if err := h.roleRepo.RemoveRoleFromUser(uint(userID), roleName); err != nil {
 		log.WithError(err).WithFields(map[string]interface{}{
 			"user_id": userID,
-			"role_id": roleID,
+			"role":    roleName,
 		}).Error("Failed to remove role from user")
 		http.Error(w, "Error removing role", http.StatusInternalServerError)
 		return
@@ -327,7 +311,7 @@ func (h *RoleHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request)
 
 	log.WithFields(map[string]interface{}{
 		"user_id": userID,
-		"role_id": roleID,
+		"role":    roleName,
 	}).Info("Role removed from user successfully")
 	
 	w.Header().Set("Content-Type", "application/json")
@@ -368,34 +352,3 @@ func (h *RoleHandler) GetUserRoles(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetUserPermissions maneja GET /users/{user_id}/permissions
-func (h *RoleHandler) GetUserPermissions(w http.ResponseWriter, r *http.Request) {
-	log := logger.GetLogger()
-	vars := mux.Vars(r)
-	userIDStr := vars["user_id"]
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-
-	permissions, err := h.roleRepo.GetUserPermissions(uint(userID))
-	if err != nil {
-		log.WithError(err).WithField("user_id", userID).Error("Failed to fetch user permissions")
-		http.Error(w, "Error fetching user permissions", http.StatusInternalServerError)
-		return
-	}
-
-	log.WithFields(map[string]interface{}{
-		"user_id": userID,
-		"count":   len(permissions),
-	}).Info("User permissions retrieved successfully")
-	
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"data":    permissions,
-		"count":   len(permissions),
-		"message": "User permissions retrieved successfully",
-	})
-}

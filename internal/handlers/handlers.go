@@ -3,128 +3,71 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/company/microservice-template/internal/domain"
-	"github.com/company/microservice-template/internal/middleware"
-	"github.com/company/microservice-template/internal/services"
-	"github.com/company/microservice-template/pkg/logger"
-	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/gorilla/mux"
+	"it-user-service/internal/repositories"
+	
 )
 
-type Handler struct {
-	healthService services.HealthService
-	logger        logger.Logger
-}
+// SetupRoutes configura todas las rutas del servicio
+func SetupRoutes(userRepo repositories.UserRepositoryInterface, profileRepo repositories.ProfileRepositoryInterface, roleRepo repositories.RoleRepositoryInterface) *mux.Router {
+	router := mux.NewRouter()
 
-func SetupRoutes(router *gin.Engine, healthService services.HealthService, logger logger.Logger) {
-	h := &Handler{
-		healthService: healthService,
-		logger:        logger,
-	}
+	// Crear handlers
+	userHandler := NewUserHandler(userRepo)
+	profileHandler := NewProfileHandler(profileRepo)
+	roleHandler := NewRoleHandler(roleRepo)
 
-	// Swagger documentation (protegido en producción)
-	router.GET("/swagger/*any", middleware.SwaggerAuth(), ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// API v1 routes
+	api := router.PathPrefix("/api/v1").Subrouter()
 
-	// API routes
-	api := router.Group("/api/v1")
-	{
-		// Health check
-		api.GET("/health", h.HealthCheck)
-		api.GET("/ready", h.ReadinessCheck)
-		
-		// Example routes (comentadas para testing)
-		// api.GET("/example", h.GetExample)
-		// api.POST("/example", h.CreateExample)
-	}
-}
+	// Health check routes
+	api.HandleFunc("/health", userHandler.HealthCheck).Methods("GET")
 
-// HealthCheck godoc
-// @Summary Health check endpoint
-// @Description Verifica el estado del servicio
-// @Tags health
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Router /health [get]
-func (h *Handler) HealthCheck(c *gin.Context) {
-	status := h.healthService.CheckHealth()
-	
-	response := domain.APIResponse{
-		Code:    "SUCCESS",
-		Message: "Service is healthy",
-		Data:    status,
-	}
-	
-	c.JSON(http.StatusOK, response)
-}
+	// User routes
+	api.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
+	api.HandleFunc("/users/{id}", userHandler.GetUserByID).Methods("GET")
+	api.HandleFunc("/users/create", userHandler.CreateUser).Methods("POST")
+	api.HandleFunc("/users/{id}", userHandler.UpdateUser).Methods("PUT")
+	api.HandleFunc("/users/{id}", userHandler.DeleteUser).Methods("DELETE")
+	api.HandleFunc("/users/firebase/{firebase_id}", userHandler.GetUserByFirebaseID).Methods("GET")
+	api.HandleFunc("/users/search", userHandler.SearchUsers).Methods("GET")
 
-// ReadinessCheck godoc
-// @Summary Readiness check endpoint
-// @Description Verifica si el servicio está listo para recibir tráfico
-// @Tags health
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Router /ready [get]
-func (h *Handler) ReadinessCheck(c *gin.Context) {
-	status := h.healthService.CheckReadiness()
-	
-	if status["ready"].(bool) {
-		response := domain.APIResponse{
-			Code:    "SUCCESS",
-			Message: "Service is ready",
-			Data:    status,
-		}
-		c.JSON(http.StatusOK, response)
-	} else {
-		response := domain.APIResponse{
-			Code:    "SERVICE_UNAVAILABLE",
-			Message: "Service is not ready",
-			Data:    status,
-		}
-		c.JSON(http.StatusServiceUnavailable, response)
-	}
-}
+	// Profile routes
+	api.HandleFunc("/users/{id}/profile", profileHandler.GetUserProfile).Methods("GET")
+	api.HandleFunc("/users/{id}/profile", profileHandler.UpdateUserProfile).Methods("PUT")
+	api.HandleFunc("/users/{id}/settings", profileHandler.GetUserSettings).Methods("GET")
+	api.HandleFunc("/users/{id}/settings", profileHandler.UpdateUserSettings).Methods("PUT")
+	api.HandleFunc("/users/{id}/stats", profileHandler.GetUserStats).Methods("GET")
 
-// Ejemplo de handler comentado para testing
-/*
-// GetExample godoc
-// @Summary Get example data
-// @Description Obtiene datos de ejemplo
-// @Tags example
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Router /example [get]
-func (h *Handler) GetExample(c *gin.Context) {
-	// Implementación de ejemplo
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Example data",
-		"data":    []string{"item1", "item2", "item3"},
+	// Role routes
+	api.HandleFunc("/roles", roleHandler.GetAllRoles).Methods("GET")
+	api.HandleFunc("/roles/{id}", roleHandler.GetRoleByID).Methods("GET")
+	api.HandleFunc("/roles", roleHandler.CreateRole).Methods("POST")
+	api.HandleFunc("/roles/{id}", roleHandler.UpdateRole).Methods("PUT")
+	api.HandleFunc("/roles/{id}", roleHandler.DeleteRole).Methods("DELETE")
+
+	// User-Role assignment routes
+	api.HandleFunc("/users/{user_id}/roles", roleHandler.AssignRoleToUser).Methods("POST")
+	api.HandleFunc("/users/{user_id}/roles/{role_name}", roleHandler.RemoveRoleFromUser).Methods("DELETE")
+	api.HandleFunc("/users/{user_id}/roles", roleHandler.GetUserRoles).Methods("GET")
+
+	// CORS middleware
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			
+			next.ServeHTTP(w, r)
+		})
 	})
-}
 
-// CreateExample godoc
-// @Summary Create example data
-// @Description Crea datos de ejemplo
-// @Tags example
-// @Accept json
-// @Produce json
-// @Param request body map[string]interface{} true "Example data"
-// @Success 201 {object} map[string]interface{}
-// @Router /example [post]
-func (h *Handler) CreateExample(c *gin.Context) {
-	var request map[string]interface{}
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 	
-	// Implementación de ejemplo
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Example created",
-		"data":    request,
-	})
+
+	return router
 }
-*/

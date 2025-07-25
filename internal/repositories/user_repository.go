@@ -56,8 +56,8 @@ func (r *UserRepository) GetByUsername(username string) (*models.User, error) {
 }
 
 // GetAll obtiene todos los usuarios con paginación
-func (r *UserRepository) GetAll(limit, offset int) ([]*models.User, error) {
-	var users []*models.User
+func (r *UserRepository) GetAll(limit, offset int) ([]models.User, error) {
+	var users []models.User
 	err := r.db.Limit(limit).Offset(offset).Find(&users).Error
 	return users, err
 }
@@ -91,15 +91,15 @@ func (r *UserRepository) UpdateLoginInfo(id uint, loginIP, loginDevice string) e
 }
 
 // GetActiveUsers obtiene todos los usuarios activos
-func (r *UserRepository) GetActiveUsers() ([]*models.User, error) {
-	var users []*models.User
+func (r *UserRepository) GetActiveUsers() ([]models.User, error) {
+	var users []models.User
 	err := r.db.Where("status = ? AND disabled = ?", "active", false).Find(&users).Error
 	return users, err
 }
 
 // SearchUsers busca usuarios por nombre, email o username
-func (r *UserRepository) SearchUsers(query string, limit, offset int) ([]*models.User, error) {
-	var users []*models.User
+func (r *UserRepository) SearchUsers(query string, limit, offset int) ([]models.User, error) {
+	var users []models.User
 	searchPattern := "%" + query + "%"
 	
 	err := r.db.Where(

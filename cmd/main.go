@@ -32,15 +32,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Cleanup al cerrar
-	defer func() {
-		if err := srv.Close(); err != nil {
-			log.WithError(err).Error("Error closing server")
-		}
-	}()
-
 	// Iniciar servidor
-	log.WithField("port", cfg.Port).Info("User Server initialized successfully")
+	log.WithField("port", cfg.Port).Info("Server initialized successfully")
 	if err := srv.Start(); err != nil {
 		log.WithError(err).Fatal("Error starting server")
 		os.Exit(1)

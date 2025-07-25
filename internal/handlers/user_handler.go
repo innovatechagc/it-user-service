@@ -300,6 +300,60 @@ func (h *UserHandler) GetUserByFirebaseID(w http.ResponseWriter, r *http.Request
 	})
 }
 
+// GetUserByUsername maneja GET /users/username/{username}
+func (h *UserHandler) GetUserByUsername(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger()
+	vars := mux.Vars(r)
+	username := vars["username"]
+	if username == "" {
+		log.Warn("Username is required but not provided")
+		http.Error(w, "Username is required", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.userRepo.GetByUsername(username)
+	if err != nil {
+		log.WithError(err).WithField("username", username).Error("Failed to fetch user by username")
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	log.WithField("username", username).Info("User retrieved successfully by username")
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":    user,
+		"message": "User retrieved successfully",
+	})
+}
+
+// GetUserByEmail maneja GET /users/email/{email}
+func (h *UserHandler) GetUserByEmail(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger()
+	vars := mux.Vars(r)
+	email := vars["email"]
+	if email == "" {
+		log.Warn("Email is required but not provided")
+		http.Error(w, "Email is required", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.userRepo.GetByEmail(email)
+	if err != nil {
+		log.WithError(err).WithField("email", email).Error("Failed to fetch user by email")
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	log.WithField("email", email).Info("User retrieved successfully by email")
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":    user,
+		"message": "User retrieved successfully",
+	})
+}
+
 // SearchUsers maneja GET /users/search
 func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
@@ -348,3 +402,143 @@ func (h *UserHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 		"message": "Search completed successfully",
 	})
 }
+
+// CountUsers maneja GET /users/count
+func (h *UserHandler) CountUsers(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger()
+	
+	count, err := h.userRepo.CountUsers()
+	if err != nil {
+		log.WithError(err).Error("Failed to count users")
+		http.Error(w, "Error counting users", http.StatusInternalServerError)
+		return
+	}
+
+	log.WithField("total_users", count).Info("Users counted successfully")
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"total":   count,
+		"message": "Users counted successfully",
+	})
+}
+
+// GetActiveUsers maneja GET /users/active
+func (h *UserHandler) GetActiveUsers(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger()
+	
+	users, err := h.userRepo.GetActiveUsers()
+	if err != nil {
+		log.WithError(err).Error("Failed to fetch active users")
+		http.Error(w, "Error fetching active users", http.StatusInternalServerError)
+		return
+	}
+
+	log.WithField("count", len(users)).Info("Active users retrieved successfully")
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":    users,
+		"count":   len(users),
+		"message": "Active users retrieved successfully",
+	})
+}
+
+// UpdateLoginInfo maneja POST /users/{id}/login
+func (h *UserHandler) UpdateLoginInfo(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger()
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.WithError(err).Warn("Invalid user ID provided for login update")
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		LoginIP     string `json:"login_ip" validate:"omitempty,ip"`
+		LoginDevice string `json:"login_device" validate:"max=255"`
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.WithError(err).Error("Failed to read request body")
+		http.Error(w, "Error reading request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := json.Unmarshal(body, &req); err != nil {
+		log.WithError(err).Error("Failed to unmarshal JSON")
+		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+		return
+	}
+
+	// Validar estructura
+	if err := validator.ValidateStruct(&req); err != nil {
+		log.WithError(err).Warn("Validation failed for login info update")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Actualizar información de login
+	if err := h.userRepo.UpdateLoginInfo(uint(id), req.LoginIP, req.LoginDevice); err != nil {
+		log.WithError(err).WithField("user_id", id).Error("Failed to update login info")
+		http.Error(w, "Error updating login info", http.StatusInternalServerError)
+		return
+	}
+
+	log.WithField("user_id", id).Info("Login info updated successfully")
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "Login info updated successfully",
+	})
+}
+
+// GetUserProfile maneja GET /users/{id}/profile - Placeholder
+func (h *UserHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger()
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	
+	log.WithField("user_id", idStr).Info("User profile requested (not implemented)")
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "User profile endpoint not implemented yet",
+		"user_id": idStr,
+	})
+}
+
+// GetUserSettings maneja GET /users/{id}/settings - Placeholder
+func (h *UserHandler) GetUserSettings(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger()
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	
+	log.WithField("user_id", idStr).Info("User settings requested (not implemented)")
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "User settings endpoint not implemented yet",
+		"user_id": idStr,
+	})
+}
+
+// GetUserStats maneja GET /users/{id}/stats - Placeholder
+func (h *UserHandler) GetUserStats(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger()
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	
+	log.WithField("user_id", idStr).Info("User stats requested (not implemented)")
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "User stats endpoint not implemented yet",
+		"user_id": idStr,
+	})
+}
+
+

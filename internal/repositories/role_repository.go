@@ -13,120 +13,161 @@ func NewRoleRepository(db *gorm.DB) RoleRepositoryInterface {
 	return &RoleRepository{db: db}
 }
 
-// Role CRUD operations - Mock implementations
+// Role CRUD operations
 
-// GetAllRoles obtiene todos los roles (mock)
+// GetAllRoles obtiene todos los roles
 func (r *RoleRepository) GetAllRoles() ([]*models.Role, error) {
-	// Mock roles data
-	roles := []*models.Role{
-		{
-			ID:          1,
-			Name:        "admin",
-			DisplayName: "Administrator",
-			Description: "Full system access",
-			IsActive:    true,
-		},
-		{
-			ID:          2,
-			Name:        "user",
-			DisplayName: "Regular User",
-			Description: "Standard user access",
-			IsActive:    true,
-		},
-		{
-			ID:          3,
-			Name:        "moderator",
-			DisplayName: "Moderator",
-			Description: "Content moderation access",
-			IsActive:    true,
-		},
-	}
-	return roles, nil
+	var roles []*models.Role
+	err := r.db.Find(&roles).Error
+	return roles, err
 }
 
-// GetRoleByID obtiene un rol por ID (mock)
+// GetRoleByID obtiene un rol por ID
 func (r *RoleRepository) GetRoleByID(id uint) (*models.Role, error) {
-	// Mock role data
-	role := &models.Role{
-		ID:          id,
-		Name:        "user",
-		DisplayName: "Regular User",
-		Description: "Standard user access",
-		IsActive:    true,
+	var role models.Role
+	err := r.db.First(&role, id).Error
+	if err != nil {
+		return nil, err
 	}
-	return role, nil
+	return &role, nil
 }
 
-// CreateRole crea un nuevo rol (mock)
+// GetRoleByName obtiene un rol por nombre
+func (r *RoleRepository) GetRoleByName(name string) (*models.Role, error) {
+	var role models.Role
+	err := r.db.Where("name = ?", name).First(&role).Error
+	if err != nil {
+		return nil, err
+	}
+	return &role, nil
+}
+
+// CreateRole crea un nuevo rol
 func (r *RoleRepository) CreateRole(role *models.Role) error {
-	// Mock implementation - no actual database operation
-	role.ID = 999 // Mock ID
-	return nil
+	return r.db.Create(role).Error
 }
 
-// UpdateRole actualiza un rol (mock)
+// UpdateRole actualiza un rol
 func (r *RoleRepository) UpdateRole(role *models.Role) error {
-	// Mock implementation - no actual database operation
-	return nil
+	return r.db.Save(role).Error
 }
 
-// DeleteRole elimina un rol (mock)
+// DeleteRole elimina un rol
 func (r *RoleRepository) DeleteRole(id uint) error {
-	// Mock implementation - no actual database operation
-	return nil
+	return r.db.Delete(&models.Role{}, id).Error
 }
 
-// User-Role relationships - Mock implementations
-
-// AssignRoleToUser asigna un rol a un usuario (mock)
-func (r *RoleRepository) AssignRoleToUser(userID, roleID uint, expiresAt interface{}) error {
-	// Mock implementation - no actual database operation
-	return nil
+// GetActiveRoles obtiene todos los roles activos
+func (r *RoleRepository) GetActiveRoles() ([]*models.Role, error) {
+	var roles []*models.Role
+	err := r.db.Where("active = ?", true).Find(&roles).Error
+	return roles, err
 }
 
-// RemoveRoleFromUser remueve un rol de un usuario (mock)
-func (r *RoleRepository) RemoveRoleFromUser(userID, roleID uint) error {
-	// Mock implementation - no actual database operation
-	return nil
-}
+// User-Role relationships (usando string role según tu SQL)
 
-// GetUserRoles obtiene todos los roles de un usuario (mock)
-func (r *RoleRepository) GetUserRoles(userID uint) ([]*models.Role, error) {
-	// Mock user roles data
-	roles := []*models.Role{
-		{
-			ID:          2,
-			Name:        "user",
-			DisplayName: "Regular User",
-			Description: "Standard user access",
-			IsActive:    true,
-		},
+// AssignRoleToUser asigna un rol a un usuario
+func (r *RoleRepository) AssignRoleToUser(userID uint, roleName string) error {
+	userRole := &models.UserRole{
+		UserID: userID,
+		Role:   roleName,
 	}
-	return roles, nil
+	return r.db.Create(userRole).Error
 }
 
-// GetUserPermissions obtiene todos los permisos de un usuario (mock)
-func (r *RoleRepository) GetUserPermissions(userID uint) ([]*models.Permission, error) {
-	// Mock user permissions data
-	permissions := []*models.Permission{
-		{
-			ID:          1,
-			Name:        "users.read",
-			DisplayName: "Read Users",
-			Description: "Can view user information",
-			Resource:    "users",
-			Action:      "read",
-			IsActive:    true,
-		},
-		{
-			ID:          2,
-			Name:        "profiles.update",
-			DisplayName: "Update Profiles",
-			Description: "Can update user profiles",
-			Resource:    "profiles",
-			Action:      "update",
-			IsActive:    true,
-		},
+// RemoveRoleFromUser remueve un rol de un usuario
+func (r *RoleRepository) RemoveRoleFromUser(userID uint, roleName string) error {
+	return r.db.Where("user_id = ? AND role = ?", userID, roleName).
+		Delete(&models.UserRole{}).Error
+}
+
+// GetUserRoles obtiene todos los roles de un usuario
+func (r *RoleRepository) GetUserRoles(userID uint) ([]*models.UserRole, error) {
+	var userRoles []*models.UserRole
+	err := r.db.Where("user_id = ?", userID).Find(&userRoles).Error
+	return userRoles, err
+}
+
+// GetUserWithRoles obtiene un usuario con sus roles
+func (r *RoleRepository) GetUserWithRoles(userID uint) (*models.UserWithRoles, error) {
+	var user models.User
+	err := r.db.First(&user, userID).Error
+	if err != nil {
+		return nil, err
 	}
-	return permissions, nil
+	
+	roles, err := r.GetUserRoles(userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Convertir []*models.UserRole a []models.UserRole
+	userRoles := make([]models.UserRole, len(roles))
+	for i, role := range roles {
+		userRoles[i] = *role
+	}
+	
+	return &models.UserWithRoles{
+		User:  user,
+		Roles: userRoles,
+	}, nil
+}
+
+// GetUsersWithRole obtiene todos los usuarios que tienen un rol específico
+func (r *RoleRepository) GetUsersWithRole(roleName string) ([]*models.User, error) {
+	var users []*models.User
+	err := r.db.Table("users").
+		Joins("JOIN user_roles ON users.id = user_roles.user_id").
+		Where("user_roles.role = ?", roleName).
+		Find(&users).Error
+	return users, err
+}
+
+// Role checking
+
+// UserHasRole verifica si un usuario tiene un rol específico
+func (r *RoleRepository) UserHasRole(userID uint, roleName string) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.UserRole{}).
+		Where("user_id = ? AND role = ?", userID, roleName).
+		Count(&count).Error
+	return count > 0, err
+}
+
+// UserHasAnyRole verifica si un usuario tiene alguno de los roles especificados
+func (r *RoleRepository) UserHasAnyRole(userID uint, roleNames []string) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.UserRole{}).
+		Where("user_id = ? AND role IN ?", userID, roleNames).
+		Count(&count).Error
+	return count > 0, err
+}
+
+// Bulk operations
+
+// AssignMultipleRolesToUser asigna múltiples roles a un usuario
+func (r *RoleRepository) AssignMultipleRolesToUser(userID uint, roleNames []string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, roleName := range roleNames {
+			userRole := &models.UserRole{
+				UserID: userID,
+				Role:   roleName,
+			}
+			if err := tx.Create(userRole).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// RemoveMultipleRolesFromUser remueve múltiples roles de un usuario
+func (r *RoleRepository) RemoveMultipleRolesFromUser(userID uint, roleNames []string) error {
+	return r.db.Where("user_id = ? AND role IN ?", userID, roleNames).
+		Delete(&models.UserRole{}).Error
+}
+
+// RemoveAllUserRoles remueve todos los roles de un usuario
+func (r *RoleRepository) RemoveAllUserRoles(userID uint) error {
+	return r.db.Where("user_id = ?", userID).Delete(&models.UserRole{}).Error
 }
