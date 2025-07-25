@@ -17,7 +17,7 @@ spec:
       containerConcurrency: 100
       timeoutSeconds: 300
       containers:
-      - image: gcr.io/PROJECT_ID/microservice-template:latest
+      - image: gcr.io/$PROJECT_ID/microservice-template:latest
         ports:
         - containerPort: 8080
         env:

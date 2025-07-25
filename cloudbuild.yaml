@@ -1,0 +1,64 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/microservice-template:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/microservice-template:latest'
+      - '.'
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/microservice-template:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/microservice-template:latest'
+
+  # Deploy to Cloud Run Staging (only on develop branch)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'services'
+      - 'replace'
+      - 'deploy/cloudrun-staging.yaml'
+      - '--region=us-central1'
+    env:
+      - 'PROJECT_ID=$PROJECT_ID'
+    waitFor: ['-']
+    id: 'deploy-staging'
+
+  # Deploy to Cloud Run Production (only on main branch)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'services'
+      - 'replace'
+      - 'deploy/cloudrun-production.yaml'
+      - '--region=us-central1'
+    env:
+      - 'PROJECT_ID=$PROJECT_ID'
+    waitFor: ['-']
+    id: 'deploy-production'
+
+# Substitute variables in deployment files
+substitutions:
+  _REGION: 'us-central1'
+
+# Images to be pushed to Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/microservice-template:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/microservice-template:latest'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+# Build timeout
+timeout: '1200s'
