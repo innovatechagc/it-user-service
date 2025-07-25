@@ -16,8 +16,6 @@ func MigrateDB() {
 	db := database.GetDB()
 	err := db.AutoMigrate(
 		&User{},
-		&EmailVerification{},
-		&PasswordResetToken{},
 		&UserProfile{},
 		&UserSettings{},
 		&UserStats{},
