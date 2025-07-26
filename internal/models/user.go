@@ -102,3 +102,58 @@ type UserStats struct {
 	// Relación con User
 	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
+// Role models - Modelos relacionados con roles
+type Role struct {
+	ID          uint      `json:"id" gorm:"primaryKey;autoIncrement"`
+	Name        string    `json:"name" gorm:"uniqueIndex;size:50;not null"`
+	Description string    `json:"description" gorm:"size:255"`
+	Active      bool      `json:"active" gorm:"default:true"`
+	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
+// UserRole models - Modelos relacionados con roles de usuario
+type UserRole struct {
+	ID        uint      `json:"id" gorm:"primaryKey;autoIncrement"`
+	UserID    uint      `json:"user_id" gorm:"not null"`
+	Role      string    `json:"role" gorm:"size:50;not null"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	
+	// Relación con User
+	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
+}
+
+// Response models - Modelos para respuestas
+type ProfileResponse struct {
+	User     User          `json:"user"`
+	Profile  *UserProfile  `json:"profile,omitempty"`
+	Settings *UserSettings `json:"settings,omitempty"`
+	Stats    *UserStats    `json:"stats,omitempty"`
+}
+
+type UserWithRoles struct {
+	User  User       `json:"user"`
+	Roles []UserRole `json:"roles"`
+}
+
+// Request models - Modelos para requests
+type CreateProfileRequest struct {
+	Avatar      string     `json:"avatar,omitempty" validate:"omitempty,url,max=500"`
+	Bio         string     `json:"bio,omitempty" validate:"max=1000"`
+	Website     string     `json:"website,omitempty" validate:"omitempty,url,max=255"`
+	Location    string     `json:"location,omitempty" validate:"max=100"`
+	Birthday    *time.Time `json:"birthday,omitempty"`
+	Gender      string     `json:"gender,omitempty" validate:"omitempty,oneof=male female other prefer_not_to_say"`
+	Phone       string     `json:"phone,omitempty" validate:"omitempty,max=20"`
+	Preferences string     `json:"preferences,omitempty"`
+	Privacy     string     `json:"privacy,omitempty"`
+}
+
+type CreateSettingsRequest struct {
+	Language      string `json:"language,omitempty" validate:"omitempty,min=2,max=10"`
+	Timezone      string `json:"timezone,omitempty" validate:"max=50"`
+	Theme         string `json:"theme,omitempty" validate:"omitempty,oneof=light dark auto"`
+	Notifications string `json:"notifications,omitempty"`
+	Privacy       string `json:"privacy,omitempty"`
+	Security      string `json:"security,omitempty"`
+}

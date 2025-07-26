@@ -142,8 +142,8 @@ func (r *ProfileRepository) UpdateLastActivity(userID uint) error {
 	// Primero intentar actualizar si existe
 	result := r.db.Model(&models.UserStats{}).Where("user_id = ?", userID).
 		Updates(map[string]interface{}{
-			"last_activity_at": now,
-			"is_active":        true,
+			"last_active_at": now,
+			"is_active":      true,
 		})
 	
 	if result.Error != nil {
@@ -153,9 +153,9 @@ func (r *ProfileRepository) UpdateLastActivity(userID uint) error {
 	// Si no se actualizó ninguna fila, crear el registro
 	if result.RowsAffected == 0 {
 		stats := &models.UserStats{
-			UserID:         userID,
-			LastActivityAt: &now,
-			IsActive:       true,
+			UserID:       userID,
+			LastActiveAt: &now,
+			IsActive:     true,
 		}
 		return r.db.Create(stats).Error
 	}

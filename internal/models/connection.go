@@ -19,6 +19,8 @@ func MigrateDB() {
 		&UserProfile{},
 		&UserSettings{},
 		&UserStats{},
+		&Role{},
+		&UserRole{},
 	)
 	
 	if err != nil {

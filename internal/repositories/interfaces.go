@@ -52,3 +52,38 @@ type UserStatsRepositoryInterface interface {
 	IncrementProfileViews(userID uint) error
 	UpdateLastActive(userID uint) error
 }
+
+// ProfileRepositoryInterface define los métodos para el repositorio de perfiles
+type ProfileRepositoryInterface interface {
+	GetByUserID(userID uint) (*models.UserProfile, error)
+	Create(profile *models.UserProfile) error
+	Update(profile *models.UserProfile) error
+	Delete(userID uint) error
+	CreateSettings(settings *models.UserSettings) error
+	GetSettingsByUserID(userID uint) (*models.UserSettings, error)
+	UpdateSettings(settings *models.UserSettings) error
+	DeleteSettings(userID uint) error
+	CreateStats(stats *models.UserStats) error
+	GetStatsByUserID(userID uint) (*models.UserStats, error)
+	UpdateStats(stats *models.UserStats) error
+	DeleteStats(userID uint) error
+	IncrementLoginCount(userID uint) error
+	UpdateLastLogin(userID uint) error
+	IncrementProfileViews(userID uint) error
+	UpdateLastActivity(userID uint) error
+}
+
+// RoleRepositoryInterface define los métodos para el repositorio de roles
+type RoleRepositoryInterface interface {
+	GetRoleByID(id uint) (*models.Role, error)
+	GetRoleByName(name string) (*models.Role, error)
+	CreateRole(role *models.Role) error
+	UpdateRole(role *models.Role) error
+	DeleteRole(id uint) error
+	GetActiveRoles() ([]*models.Role, error)
+	AssignRoleToUser(userID uint, roleName string) error
+	RemoveRoleFromUser(userID uint, roleName string) error
+	GetUserRoles(userID uint) ([]*models.UserRole, error)
+	UserHasRole(userID uint, roleName string) (bool, error)
+	UserHasAnyRole(userID uint, roleNames []string) (bool, error)
+}
