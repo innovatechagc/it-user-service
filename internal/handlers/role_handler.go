@@ -259,10 +259,10 @@ func (h *RoleHandler) AssignRoleToUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Asignar rol al usuario
-	if err := h.roleRepo.AssignRoleToUser(uint(userID), req.Role); err != nil {
+	if err := h.roleRepo.AssignRoleToUser(uint(userID), req.RoleName); err != nil {
 		log.WithError(err).WithFields(map[string]interface{}{
 			"user_id": userID,
-			"role":    req.Role,
+			"role":    req.RoleName,
 		}).Error("Failed to assign role to user")
 		http.Error(w, "Error assigning role", http.StatusInternalServerError)
 		return
@@ -270,7 +270,7 @@ func (h *RoleHandler) AssignRoleToUser(w http.ResponseWriter, r *http.Request) {
 
 	log.WithFields(map[string]interface{}{
 		"user_id": userID,
-		"role":    req.Role,
+		"role":    req.RoleName,
 	}).Info("Role assigned to user successfully")
 	
 	w.Header().Set("Content-Type", "application/json")

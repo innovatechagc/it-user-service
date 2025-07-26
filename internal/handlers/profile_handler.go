@@ -116,10 +116,10 @@ func (h *ProfileHandler) UpdateUserProfile(w http.ResponseWriter, r *http.Reques
 	if req.Phone != "" {
 		profile.Phone = req.Phone
 	}
-	if req.Preferences != nil {
+	if req.Preferences != "" {
 		profile.Preferences = req.Preferences
 	}
-	if req.Privacy != nil {
+	if req.Privacy != "" {
 		profile.Privacy = req.Privacy
 	}
 
@@ -229,13 +229,13 @@ func (h *ProfileHandler) UpdateUserSettings(w http.ResponseWriter, r *http.Reque
 	if req.Theme != "" {
 		settings.Theme = req.Theme
 	}
-	if req.Notifications != nil {
+	if req.Notifications != "" {
 		settings.Notifications = req.Notifications
 	}
-	if req.Privacy != nil {
+	if req.Privacy != "" {
 		settings.Privacy = req.Privacy
 	}
-	if req.Security != nil {
+	if req.Security != "" {
 		settings.Security = req.Security
 	}
 
