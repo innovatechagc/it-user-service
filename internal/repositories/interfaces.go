@@ -75,6 +75,7 @@ type ProfileRepositoryInterface interface {
 
 // RoleRepositoryInterface define los métodos para el repositorio de roles
 type RoleRepositoryInterface interface {
+	GetAllRoles() ([]*models.Role, error)
 	GetRoleByID(id uint) (*models.Role, error)
 	GetRoleByName(name string) (*models.Role, error)
 	CreateRole(role *models.Role) error

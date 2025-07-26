@@ -156,4 +156,41 @@ type CreateSettingsRequest struct {
 	Notifications string `json:"notifications,omitempty"`
 	Privacy       string `json:"privacy,omitempty"`
 	Security      string `json:"security,omitempty"`
+}type Upda
+teProfileRequest struct {
+	Avatar      string     `json:"avatar,omitempty" validate:"omitempty,url,max=500"`
+	Bio         string     `json:"bio,omitempty" validate:"max=1000"`
+	Website     string     `json:"website,omitempty" validate:"omitempty,url,max=255"`
+	Location    string     `json:"location,omitempty" validate:"max=100"`
+	Birthday    *time.Time `json:"birthday,omitempty"`
+	Gender      string     `json:"gender,omitempty" validate:"omitempty,oneof=male female other prefer_not_to_say"`
+	Phone       string     `json:"phone,omitempty" validate:"omitempty,max=20"`
+	Preferences string     `json:"preferences,omitempty"`
+	Privacy     string     `json:"privacy,omitempty"`
+}
+
+type UpdateSettingsRequest struct {
+	Language      string `json:"language,omitempty" validate:"omitempty,min=2,max=10"`
+	Timezone      string `json:"timezone,omitempty" validate:"max=50"`
+	Theme         string `json:"theme,omitempty" validate:"omitempty,oneof=light dark auto"`
+	Notifications string `json:"notifications,omitempty"`
+	Privacy       string `json:"privacy,omitempty"`
+	Security      string `json:"security,omitempty"`
+}
+
+type CreateRoleRequest struct {
+	Name        string `json:"name" validate:"required,min=2,max=50"`
+	Description string `json:"description,omitempty" validate:"max=255"`
+	Active      bool   `json:"active"`
+}
+
+type UpdateRoleRequest struct {
+	Name        string `json:"name,omitempty" validate:"omitempty,min=2,max=50"`
+	Description string `json:"description,omitempty" validate:"max=255"`
+	Active      *bool  `json:"active,omitempty"`
+}
+
+type AssignRoleRequest struct {
+	UserID   uint   `json:"user_id" validate:"required,min=1"`
+	RoleName string `json:"role_name" validate:"required,min=2,max=50"`
 }
