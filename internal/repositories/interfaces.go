@@ -21,30 +21,7 @@ type UserRepositoryInterface interface {
 	CountUsers() (int64, error)
 }
 
-// EmailVerificationRepositoryInterface define los métodos para verificación de email
-type EmailVerificationRepositoryInterface interface {
-	GetByUserID(userID uint) (*models.EmailVerification, error)
-	GetByEmail(email string) (*models.EmailVerification, error)
-	GetByFirebaseID(firebaseID string) (*models.EmailVerification, error)
-	Create(verification *models.EmailVerification) error
-	Update(verification *models.EmailVerification) error
-	Delete(id uint) error
-	MarkAsVerified(userID uint) error
-	IncrementAttempts(userID uint) error
-	GetPendingVerifications() ([]models.EmailVerification, error)
-}
 
-// PasswordResetRepositoryInterface define los métodos para reset de contraseña
-type PasswordResetRepositoryInterface interface {
-	GetByToken(token string) (*models.PasswordResetToken, error)
-	GetByCode(code string) (*models.PasswordResetToken, error)
-	GetByUserID(userID uint) (*models.PasswordResetToken, error)
-	Create(resetToken *models.PasswordResetToken) error
-	Update(resetToken *models.PasswordResetToken) error
-	Delete(id uint) error
-	MarkAsUsed(id uint) error
-	CleanExpiredTokens() error
-}
 
 // UserProfileRepositoryInterface define los métodos para perfiles de usuario
 type UserProfileRepositoryInterface interface {
