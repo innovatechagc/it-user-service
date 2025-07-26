@@ -27,8 +27,8 @@ steps:
     args:
       - '-c'
       - |
-        sed 's/\$$PROJECT_ID/'$PROJECT_ID'/g' deploy/cloudrun-staging.yaml > deploy/cloudrun-staging-processed.yaml
-        sed 's/\$$PROJECT_ID/'$PROJECT_ID'/g' deploy/cloudrun-production.yaml > deploy/cloudrun-production-processed.yaml
+        sed -e 's/\$$PROJECT_ID/'$PROJECT_ID'/g' -e 's/\$$COMMIT_SHA/'$COMMIT_SHA'/g' deploy/cloudrun-staging.yaml > deploy/cloudrun-staging-processed.yaml
+        sed -e 's/\$$PROJECT_ID/'$PROJECT_ID'/g' -e 's/\$$COMMIT_SHA/'$COMMIT_SHA'/g' deploy/cloudrun-production.yaml > deploy/cloudrun-production-processed.yaml
     id: 'substitute-vars'
 
   # Deploy to Cloud Run Staging (only on develop branch)
