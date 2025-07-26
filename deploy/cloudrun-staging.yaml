@@ -29,6 +29,14 @@ spec:
             secretKeyRef:
               key: latest
               name: it-chatbot-jwt-password
+        - name: DB_HOST
+          value: "35.227.10.150"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "it_db_chatbot"
+        - name: DB_USER
+          value: "postgres"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:

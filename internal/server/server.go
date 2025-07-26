@@ -22,14 +22,7 @@ type Server struct {
 
 func NewServer(cfg config.Config) (*Server, error) {
 	// Conectar a la base de datos
-	if err := database.Connect(cfg); err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	// Verificar conexión a la base de datos
-	if err := database.TestConnection(); err != nil {
-		return nil, fmt.Errorf("failed to test database connection: %w", err)
-	}
+	database.ConnectDB()
 
 	// Inicializar repositorios
 	db := database.GetDB()
@@ -58,5 +51,9 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Close() error {
-	return database.Close()
+	sqlDB, err := database.GetDB().DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
 }
