@@ -156,8 +156,9 @@ type CreateSettingsRequest struct {
 	Notifications string `json:"notifications,omitempty"`
 	Privacy       string `json:"privacy,omitempty"`
 	Security      string `json:"security,omitempty"`
-}type Upda
-teProfileRequest struct {
+}
+
+type UpdateProfileRequest struct {
 	Avatar      string     `json:"avatar,omitempty" validate:"omitempty,url,max=500"`
 	Bio         string     `json:"bio,omitempty" validate:"max=1000"`
 	Website     string     `json:"website,omitempty" validate:"omitempty,url,max=255"`
