@@ -12,6 +12,22 @@ import (
 func SetupRoutes(userRepo repositories.UserRepositoryInterface, profileRepo repositories.ProfileRepositoryInterface, roleRepo repositories.RoleRepositoryInterface) *mux.Router {
 	router := mux.NewRouter()
 
+	// CORS middleware - DEBE IR PRIMERO
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			
+			next.ServeHTTP(w, r)
+		})
+	})
+
 	// Crear handlers
 	userHandler := NewUserHandler(userRepo)
 	profileHandler := NewProfileHandler(profileRepo)
@@ -19,6 +35,30 @@ func SetupRoutes(userRepo repositories.UserRepositoryInterface, profileRepo repo
 
 	// API v1 routes
 	api := router.PathPrefix("/api/v1").Subrouter()
+
+	// Aplicar CORS también al subrouter
+	api.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			
+			next.ServeHTTP(w, r)
+		})
+	})
+
+	// OPTIONS handler para CORS preflight
+	api.HandleFunc("/{path:.*}", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.WriteHeader(http.StatusOK)
+	}).Methods("OPTIONS")
 
 	// Health check routes
 	api.HandleFunc("/health", userHandler.HealthCheck).Methods("GET")
@@ -50,24 +90,6 @@ func SetupRoutes(userRepo repositories.UserRepositoryInterface, profileRepo repo
 	api.HandleFunc("/users/{user_id}/roles", roleHandler.AssignRoleToUser).Methods("POST")
 	api.HandleFunc("/users/{user_id}/roles/{role_name}", roleHandler.RemoveRoleFromUser).Methods("DELETE")
 	api.HandleFunc("/users/{user_id}/roles", roleHandler.GetUserRoles).Methods("GET")
-
-	// CORS middleware
-	router.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-			
-			if r.Method == "OPTIONS" {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
-			
-			next.ServeHTTP(w, r)
-		})
-	})
-
-	
 
 	return router
 }
