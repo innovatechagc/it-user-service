@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	ID              uint       `json:"id" gorm:"primaryKey;autoIncrement"`
+	ID              string     `json:"id" gorm:"primaryKey;type:uuid"`
 	FirebaseID      string     `json:"firebase_id" gorm:"uniqueIndex;size:128;not null"`
 	Email           string     `json:"email" gorm:"uniqueIndex;size:255;not null"`
 	EmailVerified   bool       `json:"email_verified" gorm:"default:false"`
@@ -52,7 +52,7 @@ type UpdateUserRequest struct {
 // User Profile models - Modelos relacionados con el perfil del usuario
 type UserProfile struct {
 	ID          uint                   `json:"id" gorm:"primaryKey;autoIncrement"`
-	UserID      uint                   `json:"user_id" gorm:"not null;uniqueIndex"`
+	UserID      string                 `json:"user_id" gorm:"not null;uniqueIndex;type:uuid"`
 	Avatar      string                 `json:"avatar,omitempty" gorm:"size:500"`
 	Bio         string                 `json:"bio,omitempty" gorm:"type:text"`
 	Website     string                 `json:"website,omitempty" gorm:"size:255"`
@@ -72,7 +72,7 @@ type UserProfile struct {
 // User Settings models - Modelos relacionados con configuraciones del usuario
 type UserSettings struct {
 	ID            uint      `json:"id" gorm:"primaryKey;autoIncrement"`
-	UserID        uint      `json:"user_id" gorm:"not null;uniqueIndex"`
+	UserID        string    `json:"user_id" gorm:"not null;uniqueIndex;type:uuid"`
 	Language      string    `json:"language" gorm:"size:10;default:'en'"`
 	Timezone      string    `json:"timezone" gorm:"size:50;default:'UTC'"`
 	Theme         string    `json:"theme" gorm:"size:20;default:'light'"`
@@ -89,7 +89,7 @@ type UserSettings struct {
 // User Statistics models - Modelos relacionados con estadísticas del usuario
 type UserStats struct {
 	ID           uint       `json:"id" gorm:"primaryKey;autoIncrement"`
-	UserID       uint       `json:"user_id" gorm:"not null;uniqueIndex"`
+	UserID       string     `json:"user_id" gorm:"not null;uniqueIndex;type:uuid"`
 	LoginCount   int        `json:"login_count" gorm:"default:0"`
 	LastLoginAt  *time.Time `json:"last_login_at,omitempty"`
 	ProfileViews int        `json:"profile_views" gorm:"default:0"`
@@ -115,7 +115,7 @@ type Role struct {
 // UserRole models - Modelos relacionados con roles de usuario
 type UserRole struct {
 	ID        uint      `json:"id" gorm:"primaryKey;autoIncrement"`
-	UserID    uint      `json:"user_id" gorm:"not null"`
+	UserID    string    `json:"user_id" gorm:"not null;type:uuid"`
 	Role      string    `json:"role" gorm:"size:50;not null"`
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	
@@ -192,6 +192,6 @@ type UpdateRoleRequest struct {
 }
 
 type AssignRoleRequest struct {
-	UserID   uint   `json:"user_id" validate:"required,min=1"`
+	UserID   string `json:"user_id" validate:"required,uuid"`
 	RoleName string `json:"role_name" validate:"required,min=2,max=50"`
 }

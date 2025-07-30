@@ -77,15 +77,16 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	id := vars["id"]
+	
+	// Validar que el ID no esté vacío
+	if id == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	user, err := h.userRepo.GetByID(uint(id))
+	user, err := h.userRepo.GetByID(id)
 	if err != nil {
 		log.WithError(err).WithField("user_id", id).Error("Failed to fetch user")
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -164,10 +165,11 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	id := vars["id"]
+	
+	// Validar que el ID no esté vacío
+	if id == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
@@ -195,7 +197,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Obtener usuario existente
-	user, err := h.userRepo.GetByID(uint(id))
+	user, err := h.userRepo.GetByID(id)
 	if err != nil {
 		log.WithError(err).WithField("user_id", id).Error("User not found for update")
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -242,16 +244,17 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	id := vars["id"]
+	
+	// Validar que el ID no esté vacío
+	if id == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
 	// Verificar que el usuario existe antes de eliminarlo
-	_, err = h.userRepo.GetByID(uint(id))
+	_, err := h.userRepo.GetByID(id)
 	if err != nil {
 		log.WithError(err).WithField("user_id", id).Error("User not found for deletion")
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -259,7 +262,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Eliminar usuario
-	if err := h.userRepo.Delete(uint(id)); err != nil {
+	if err := h.userRepo.Delete(id); err != nil {
 		log.WithError(err).WithField("user_id", id).Error("Failed to delete user")
 		http.Error(w, "Error deleting user", http.StatusInternalServerError)
 		return
@@ -448,10 +451,11 @@ func (h *UserHandler) GetActiveUsers(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) UpdateLoginInfo(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided for login update")
+	id := vars["id"]
+	
+	// Validar que el ID no esté vacío
+	if id == "" {
+		log.Warn("Empty user ID provided for login update")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
@@ -482,7 +486,7 @@ func (h *UserHandler) UpdateLoginInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Actualizar información de login
-	if err := h.userRepo.UpdateLoginInfo(uint(id), req.LoginIP, req.LoginDevice); err != nil {
+	if err := h.userRepo.UpdateLoginInfo(id, req.LoginIP, req.LoginDevice); err != nil {
 		log.WithError(err).WithField("user_id", id).Error("Failed to update login info")
 		http.Error(w, "Error updating login info", http.StatusInternalServerError)
 		return

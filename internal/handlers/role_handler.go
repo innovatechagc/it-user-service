@@ -228,10 +228,11 @@ func (h *RoleHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 func (h *RoleHandler) AssignRoleToUser(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	userIDStr := vars["user_id"]
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	userID := vars["user_id"]
+	
+	// Validar que el UserID no esté vacío
+	if userID == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
@@ -259,7 +260,7 @@ func (h *RoleHandler) AssignRoleToUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Asignar rol al usuario
-	if err := h.roleRepo.AssignRoleToUser(uint(userID), req.RoleName); err != nil {
+	if err := h.roleRepo.AssignRoleToUser(userID, req.RoleName); err != nil {
 		log.WithError(err).WithFields(map[string]interface{}{
 			"user_id": userID,
 			"role":    req.RoleName,
@@ -283,12 +284,12 @@ func (h *RoleHandler) AssignRoleToUser(w http.ResponseWriter, r *http.Request) {
 func (h *RoleHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	userIDStr := vars["user_id"]
+	userID := vars["user_id"]
 	roleName := vars["role_name"]
 	
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	// Validar que el UserID no esté vacío
+	if userID == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
@@ -300,7 +301,7 @@ func (h *RoleHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Remover rol del usuario
-	if err := h.roleRepo.RemoveRoleFromUser(uint(userID), roleName); err != nil {
+	if err := h.roleRepo.RemoveRoleFromUser(userID, roleName); err != nil {
 		log.WithError(err).WithFields(map[string]interface{}{
 			"user_id": userID,
 			"role":    roleName,
@@ -324,15 +325,16 @@ func (h *RoleHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request)
 func (h *RoleHandler) GetUserRoles(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	userIDStr := vars["user_id"]
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	userID := vars["user_id"]
+	
+	// Validar que el UserID no esté vacío
+	if userID == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	roles, err := h.roleRepo.GetUserRoles(uint(userID))
+	roles, err := h.roleRepo.GetUserRoles(userID)
 	if err != nil {
 		log.WithError(err).WithField("user_id", userID).Error("Failed to fetch user roles")
 		http.Error(w, "Error fetching user roles", http.StatusInternalServerError)

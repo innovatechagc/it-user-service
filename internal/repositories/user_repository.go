@@ -16,9 +16,9 @@ func NewUserRepository(db *gorm.DB) UserRepositoryInterface {
 }
 
 // GetByID obtiene un usuario por su ID
-func (r *UserRepository) GetByID(id uint) (*models.User, error) {
+func (r *UserRepository) GetByID(id string) (*models.User, error) {
 	var user models.User
-	err := r.db.First(&user, id).Error
+	err := r.db.Where("id = ?", id).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +64,10 @@ func (r *UserRepository) GetAll(limit, offset int) ([]models.User, error) {
 
 // Create crea un nuevo usuario
 func (r *UserRepository) Create(user *models.User) error {
+	// Si no tiene ID, dejar que PostgreSQL lo genere
+	if user.ID == "" {
+		return r.db.Omit("id").Create(user).Error
+	}
 	return r.db.Create(user).Error
 }
 
@@ -73,12 +77,12 @@ func (r *UserRepository) Update(user *models.User) error {
 }
 
 // Delete elimina un usuario por su ID
-func (r *UserRepository) Delete(id uint) error {
-	return r.db.Delete(&models.User{}, id).Error
+func (r *UserRepository) Delete(id string) error {
+	return r.db.Where("id = ?", id).Delete(&models.User{}).Error
 }
 
 // UpdateLoginInfo actualiza la información de login del usuario
-func (r *UserRepository) UpdateLoginInfo(id uint, loginIP, loginDevice string) error {
+func (r *UserRepository) UpdateLoginInfo(id string, loginIP, loginDevice string) error {
 	updates := map[string]interface{}{
 		"login_count":        gorm.Expr("login_count + 1"),
 		"last_login_at":      time.Now(),

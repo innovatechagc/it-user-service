@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"it-user-service/internal/logger"
@@ -27,15 +26,16 @@ func NewProfileHandler(profileRepo repositories.ProfileRepositoryInterface) *Pro
 func (h *ProfileHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	id := vars["id"]
+	
+	// Validar que el ID no esté vacío
+	if id == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	profile, err := h.profileRepo.GetByUserID(uint(id))
+	profile, err := h.profileRepo.GetByUserID(id)
 	if err != nil {
 		log.WithError(err).WithField("user_id", id).Error("Failed to fetch user profile")
 		http.Error(w, "Profile not found", http.StatusNotFound)
@@ -55,10 +55,11 @@ func (h *ProfileHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) 
 func (h *ProfileHandler) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	id := vars["id"]
+	
+	// Validar que el ID no esté vacío
+	if id == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
@@ -86,11 +87,11 @@ func (h *ProfileHandler) UpdateUserProfile(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Obtener perfil existente o crear uno nuevo
-	profile, err := h.profileRepo.GetByUserID(uint(id))
+	profile, err := h.profileRepo.GetByUserID(id)
 	if err != nil {
 		// Si no existe, crear uno nuevo
 		profile = &models.UserProfile{
-			UserID: uint(id),
+			UserID: id,
 		}
 	}
 
@@ -149,15 +150,16 @@ func (h *ProfileHandler) UpdateUserProfile(w http.ResponseWriter, r *http.Reques
 func (h *ProfileHandler) GetUserSettings(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	id := vars["id"]
+	
+	// Validar que el ID no esté vacío
+	if id == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	settings, err := h.profileRepo.GetSettingsByUserID(uint(id))
+	settings, err := h.profileRepo.GetSettingsByUserID(id)
 	if err != nil {
 		log.WithError(err).WithField("user_id", id).Error("Failed to fetch user settings")
 		http.Error(w, "Settings not found", http.StatusNotFound)
@@ -177,10 +179,11 @@ func (h *ProfileHandler) GetUserSettings(w http.ResponseWriter, r *http.Request)
 func (h *ProfileHandler) UpdateUserSettings(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	id := vars["id"]
+	
+	// Validar que el ID no esté vacío
+	if id == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
@@ -208,11 +211,11 @@ func (h *ProfileHandler) UpdateUserSettings(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Obtener configuraciones existentes o crear nuevas
-	settings, err := h.profileRepo.GetSettingsByUserID(uint(id))
+	settings, err := h.profileRepo.GetSettingsByUserID(id)
 	if err != nil {
 		// Si no existe, crear nuevas
 		settings = &models.UserSettings{
-			UserID:   uint(id),
+			UserID:   id,
 			Language: "en",
 			Timezone: "UTC",
 			Theme:    "light",
@@ -265,15 +268,16 @@ func (h *ProfileHandler) UpdateUserSettings(w http.ResponseWriter, r *http.Reque
 func (h *ProfileHandler) GetUserStats(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger()
 	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.WithError(err).Warn("Invalid user ID provided")
+	id := vars["id"]
+	
+	// Validar que el ID no esté vacío
+	if id == "" {
+		log.Warn("Empty user ID provided")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	stats, err := h.profileRepo.GetStatsByUserID(uint(id))
+	stats, err := h.profileRepo.GetStatsByUserID(id)
 	if err != nil {
 		log.WithError(err).WithField("user_id", id).Error("Failed to fetch user stats")
 		http.Error(w, "Stats not found", http.StatusNotFound)

@@ -14,6 +14,10 @@ func ConnectDB() {
 // MigrateDB ejecuta las migraciones automáticas
 func MigrateDB() {
 	db := database.GetDB()
+	
+	// Habilitar extensión UUID si no existe
+	db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
+	
 	err := db.AutoMigrate(
 		&User{},
 		&UserProfile{},

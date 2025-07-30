@@ -17,7 +17,7 @@ func NewProfileRepository(db *gorm.DB) ProfileRepositoryInterface {
 // Profile CRUD operations
 
 // GetByUserID obtiene el perfil de un usuario
-func (r *ProfileRepository) GetByUserID(userID uint) (*models.UserProfile, error) {
+func (r *ProfileRepository) GetByUserID(userID string) (*models.UserProfile, error) {
 	var profile models.UserProfile
 	err := r.db.Where("user_id = ?", userID).First(&profile).Error
 	if err != nil {
@@ -37,7 +37,7 @@ func (r *ProfileRepository) Update(profile *models.UserProfile) error {
 }
 
 // Delete elimina un perfil de usuario
-func (r *ProfileRepository) Delete(userID uint) error {
+func (r *ProfileRepository) Delete(userID string) error {
 	return r.db.Where("user_id = ?", userID).Delete(&models.UserProfile{}).Error
 }
 
@@ -49,7 +49,7 @@ func (r *ProfileRepository) CreateSettings(settings *models.UserSettings) error 
 }
 
 // GetSettingsByUserID obtiene las configuraciones de un usuario
-func (r *ProfileRepository) GetSettingsByUserID(userID uint) (*models.UserSettings, error) {
+func (r *ProfileRepository) GetSettingsByUserID(userID string) (*models.UserSettings, error) {
 	var settings models.UserSettings
 	err := r.db.Where("user_id = ?", userID).First(&settings).Error
 	if err != nil {
@@ -64,7 +64,7 @@ func (r *ProfileRepository) UpdateSettings(settings *models.UserSettings) error 
 }
 
 // DeleteSettings elimina las configuraciones de usuario
-func (r *ProfileRepository) DeleteSettings(userID uint) error {
+func (r *ProfileRepository) DeleteSettings(userID string) error {
 	return r.db.Where("user_id = ?", userID).Delete(&models.UserSettings{}).Error
 }
 
@@ -76,7 +76,7 @@ func (r *ProfileRepository) CreateStats(stats *models.UserStats) error {
 }
 
 // GetStatsByUserID obtiene las estadísticas de un usuario
-func (r *ProfileRepository) GetStatsByUserID(userID uint) (*models.UserStats, error) {
+func (r *ProfileRepository) GetStatsByUserID(userID string) (*models.UserStats, error) {
 	var stats models.UserStats
 	err := r.db.Where("user_id = ?", userID).First(&stats).Error
 	if err != nil {
@@ -91,20 +91,20 @@ func (r *ProfileRepository) UpdateStats(stats *models.UserStats) error {
 }
 
 // DeleteStats elimina las estadísticas de usuario
-func (r *ProfileRepository) DeleteStats(userID uint) error {
+func (r *ProfileRepository) DeleteStats(userID string) error {
 	return r.db.Where("user_id = ?", userID).Delete(&models.UserStats{}).Error
 }
 
 // Stats operations
 
 // IncrementLoginCount incrementa el contador de logins en la tabla users
-func (r *ProfileRepository) IncrementLoginCount(userID uint) error {
+func (r *ProfileRepository) IncrementLoginCount(userID string) error {
 	return r.db.Model(&models.User{}).Where("id = ?", userID).
 		UpdateColumn("login_count", gorm.Expr("login_count + 1")).Error
 }
 
 // UpdateLastLogin actualiza la fecha del último login en la tabla users
-func (r *ProfileRepository) UpdateLastLogin(userID uint) error {
+func (r *ProfileRepository) UpdateLastLogin(userID string) error {
 	now := time.Now()
 	return r.db.Model(&models.User{}).Where("id = ?", userID).
 		Updates(map[string]interface{}{
@@ -113,7 +113,7 @@ func (r *ProfileRepository) UpdateLastLogin(userID uint) error {
 }
 
 // IncrementProfileViews incrementa el contador de vistas del perfil
-func (r *ProfileRepository) IncrementProfileViews(userID uint) error {
+func (r *ProfileRepository) IncrementProfileViews(userID string) error {
 	// Primero intentar actualizar si existe
 	result := r.db.Model(&models.UserStats{}).Where("user_id = ?", userID).
 		UpdateColumn("profile_views", gorm.Expr("profile_views + 1"))
@@ -136,7 +136,7 @@ func (r *ProfileRepository) IncrementProfileViews(userID uint) error {
 }
 
 // UpdateLastActivity actualiza la última actividad del usuario
-func (r *ProfileRepository) UpdateLastActivity(userID uint) error {
+func (r *ProfileRepository) UpdateLastActivity(userID string) error {
 	now := time.Now()
 	
 	// Primero intentar actualizar si existe
@@ -164,7 +164,7 @@ func (r *ProfileRepository) UpdateLastActivity(userID uint) error {
 }
 
 // GetCompleteProfile obtiene el perfil completo con usuario, perfil, configuraciones y estadísticas
-func (r *ProfileRepository) GetCompleteProfile(userID uint) (*models.ProfileResponse, error) {
+func (r *ProfileRepository) GetCompleteProfile(userID string) (*models.ProfileResponse, error) {
 	var user models.User
 	err := r.db.Where("id = ?", userID).First(&user).Error
 	if err != nil {
@@ -197,7 +197,7 @@ func (r *ProfileRepository) GetCompleteProfile(userID uint) (*models.ProfileResp
 }
 
 // CreateCompleteProfile crea un perfil completo con configuraciones iniciales
-func (r *ProfileRepository) CreateCompleteProfile(userID uint, profileReq *models.CreateProfileRequest, settingsReq *models.CreateSettingsRequest) error {
+func (r *ProfileRepository) CreateCompleteProfile(userID string, profileReq *models.CreateProfileRequest, settingsReq *models.CreateSettingsRequest) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// Crear perfil si se proporciona
 		if profileReq != nil {

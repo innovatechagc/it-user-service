@@ -1,0 +1,372 @@
+{
+  "info": {
+    "name": "IT User Service API",
+    "description": "API para gestión de usuarios, perfiles y roles",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url_local",
+      "value": "http://localhost:8080/api/v1"
+    },
+    {
+      "key": "base_url_staging",
+      "value": "https://it-user-service-staging-[hash]-ue.a.run.app/api/v1"
+    },
+    {
+      "key": "base_url_production",
+      "value": "https://it-user-service-[hash]-ue.a.run.app/api/v1"
+    },
+    {
+      "key": "user_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "description": "UUID del usuario para testing - actualizar después de crear usuario"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/health",
+              "host": ["{{base_url_local}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users?limit=10&offset=0",
+              "host": ["{{base_url_local}}"],
+              "path": ["users"],
+              "query": [
+                {"key": "limit", "value": "10"},
+                {"key": "offset", "value": "0"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users/{{user_id}}",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get User by Firebase ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users/firebase/firebase-user-id-123",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "firebase", "firebase-user-id-123"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firebase_id\": \"firebase-user-123\",\n  \"email\": \"test@example.com\",\n  \"email_verified\": true,\n  \"username\": \"testuser\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"provider\": \"google\",\n  \"provider_id\": \"google-123\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/users/create",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "create"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Updated Name\",\n  \"last_name\": \"Updated Last\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/users/1",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users/search?q=test&limit=10&offset=0",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "search"],
+              "query": [
+                {"key": "q", "value": "test"},
+                {"key": "limit", "value": "10"},
+                {"key": "offset", "value": "0"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users/1",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profiles",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users/1/profile",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "1", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Updated bio\",\n  \"website\": \"https://example.com\",\n  \"location\": \"New York\",\n  \"gender\": \"prefer_not_to_say\",\n  \"phone\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/users/1/profile",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "1", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get User Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users/1/settings",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "1", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Update User Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"es\",\n  \"timezone\": \"America/New_York\",\n  \"theme\": \"dark\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/users/1/settings",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "1", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Get User Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users/{{user_id}}/stats",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "{{user_id}}", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/roles",
+              "host": ["{{base_url_local}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "Get Role by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/roles/1",
+              "host": ["{{base_url_local}}"],
+              "path": ["roles", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"admin\",\n  \"description\": \"Administrator role\",\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/roles",
+              "host": ["{{base_url_local}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated admin role\",\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/roles/1",
+              "host": ["{{base_url_local}}"],
+              "path": ["roles", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/roles/1",
+              "host": ["{{base_url_local}}"],
+              "path": ["roles", "1"]
+            }
+          }
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"role_name\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/users/1/roles",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "1", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Get User Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users/1/roles",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "1", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Remove Role from User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_local}}/users/{{user_id}}/roles/admin",
+              "host": ["{{base_url_local}}"],
+              "path": ["users", "{{user_id}}", "roles", "admin"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
