@@ -2,41 +2,67 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 )
 
 func CORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
+		environment := os.Getenv("ENVIRONMENT")
 		
-		// Log para debugging
-		if origin != "" {
-			// Para desarrollo, permitir todos los orígenes de localhost y 127.0.0.1
-			if strings.HasPrefix(origin, "http://localhost:") || 
-			   strings.HasPrefix(origin, "http://127.0.0.1:") ||
-			   strings.HasPrefix(origin, "https://localhost:") || 
-			   strings.HasPrefix(origin, "https://127.0.0.1:") {
-				w.Header().Set("Access-Control-Allow-Origin", origin)
-			} else {
-				// Para otros orígenes, usar lista específica (producción)
-				allowedOrigins := []string{
-					"https://tudominio.com",
-					"https://www.tudominio.com",
-				}
-				
-				for _, allowed := range allowedOrigins {
-					if origin == allowed {
-						w.Header().Set("Access-Control-Allow-Origin", origin)
-						break
-					}
+		// Configuración de CORS según el ambiente
+		if environment == "production" {
+			// En producción, solo permitir orígenes específicos
+			allowedOrigins := []string{
+				"https://innovatech.com",
+				"https://www.innovatech.com",
+				"https://app.innovatech.com",
+			}
+			
+			originAllowed := false
+			for _, allowed := range allowedOrigins {
+				if origin == allowed {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+					originAllowed = true
+					break
 				}
 			}
+			
+			if !originAllowed && origin != "" {
+				// Origen no permitido en producción
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 		} else {
-			// Si no hay Origin header, permitir para desarrollo
-			w.Header().Set("Access-Control-Allow-Origin", "*")
+			// En desarrollo/staging, permitir orígenes locales
+			if origin != "" {
+				if strings.HasPrefix(origin, "http://localhost:") || 
+				   strings.HasPrefix(origin, "http://127.0.0.1:") ||
+				   strings.HasPrefix(origin, "https://localhost:") || 
+				   strings.HasPrefix(origin, "https://127.0.0.1:") {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+				} else {
+					// Para otros orígenes en desarrollo, usar lista específica
+					devAllowedOrigins := []string{
+						"https://staging.innovatech.com",
+						"https://dev.innovatech.com",
+					}
+					
+					for _, allowed := range devAllowedOrigins {
+						if origin == allowed {
+							w.Header().Set("Access-Control-Allow-Origin", origin)
+							break
+						}
+					}
+				}
+			} else {
+				// Si no hay Origin header en desarrollo, permitir
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+			}
 		}
 		
-		// Headers CORS más completos
+		// Headers CORS estándar
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Origin")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
